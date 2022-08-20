@@ -1,0 +1,1244 @@
+import IPython
+#Chess lol
+from array import *
+from copy import *
+import random
+ 
+
+#pieces should be removed from array when 'taken'
+class board:
+  
+  def __init__(self, pieceBoard):
+    
+    self.pieceBoard = pieceBoard
+    self.blackKingPos = (0,4)
+    self.whiteKingPos = (7,4)
+    self.lastMove = (0,0,0,0,'p')
+    self.blackPieces = self.setPieces('b')
+    self.whitePieces = self.setPieces('w')
+    self.initializeHeatmaps()
+  #initializes positional heatmaps for the pieces
+  def initializeHeatmaps(self):
+    #2d arrays represents the "value" of piece positions, [rows][columns]
+    #heatmaps for white pieces
+    self.wPawnHeatmap = [[ 800,  800,  800,  800,  800,  800,  800,  800],[50, 50, 50, 50, 50, 50, 50, 50],[10, 10, 20, 30, 30, 20, 10, 10],[ 5,  5, 10, 25, 25, 10,  5,  5],[0,  0,  0, 25, 25,  0,  0,  0],[5, -5,-10,  0,  0,-10, -5,  5],[5, 10, 10,-25,-25, 10, 10,  5],[ 0,  0,  0,  0,  0,  0,  0,  0]]
+    self.wKnightHeatmap = [[-50,-40,-30,-30,-30,-30,-40,-50],[-40,-20,  0,  0,  0,  0,-20,-40],[-30,  0, 10, 15, 15, 10,  0,-30],[-30,  5, 15, 20, 20, 15,  5,-30],[-30,  0, 15, 20, 20, 15,  0,-30],[-30,  5, 10, 15, 15, 10,  5,-30],[-40,-20,  0,  5,  5,  0,-20,-40],[-50,-40,-30,-30,-30,-30,-40,-50]]
+    self.wBishopHeatmap = [[-20,-10,-30,-10,-10,-30,-10,-20],[-10,  0,  0,  0,  0,  0,  0,-10],[-10,  0,  5, 10, 10,  5,  0,-10],[-10,  5,  5, 10, 10,  5,  5,-10],[-10,  0, 10, 10, 10, 10,  0,-10],[-10, 10, 10, 10, 10, 10, 10,-10],[-10,  5,  0,  0,  0,  0,  5,-10],[-20,-10,-30,-10,-10,-30,-10,-20]]
+    self.wRookHeatmap = [[0,  0,  0,  0,  0,  0,  0,  0],[ 5, 10, 10, 10, 10, 10, 10,  5],[-5,  0,  0,  0,  0,  0,  0, -5],[-5,  0,  0,  0,  0,  0,  0, -5],[-5,  0,  0,  0,  0,  0,  0, -5],[-5,  0,  0,  0,  0,  0,  0, -5],[-5,  0,  0,  0,  0,  0,  0, -5],[0,  0,  0,  5,  5,  0,  0,  0]]
+    self.wQueenHeatmap = [[-20,-10,-10, -5, -5,-10,-10,-20],[-10,  0,  30,  30,  30,  0,  0,-10],[-10,  0,  35,  35,  35,  35,  0,-10],[-5,  0,  35,  35,  35,  35,  0, -5],[ 0,  0,  5,  5,  5,  5,  0, -5],[-10,  5,  5,  5,  5,  5,  0,-10],[-10,  0,  5,  0,  0,  0,  0,-10],[-20,-10,-10, -5, -5,-10,-10,-20]]
+    self.wKingEarlyGameHeatmap = [[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-20,-30,-30,-40,-40,-30,-30,-20],[-10,-20,-20,-20,-20,-20,-20,-10],[20, 20,  -500,  -500,  -500,  -500, 20, 20],[20, 50, 10,  0,  0, 10, 50, 20]]
+    self.wKingLateGameHeatmap = [[-50,-40,-30,-20,-20,-30,-40,-50],[-30,-20,-10,  0,  0,-10,-20,-30],[-30,-10, 20, 30, 30, 20,-10,-30],[-30,-10, 30, 40, 40, 30,-10,-30],[-30,-10, 30, 40, 40, 30,-10,-30],[-30,-10, 20, 30, 30, 20,-10,-30],[-30,-30,  0,  0,  0,  0,-30,-30],[-50,-30,-30,-30,-30,-30,-30,-50]]
+ 
+    #heatmaps for black pieces                        
+    self.bPawnHeatmap = [[ 0,  0,  0,  0,  0,  0,  0,  0],[5, 10, 10,-25,-25, 10, 10,  5],[5, -5,-10,  0,  0,-10, -5,  5],[  0,  0,  0, 25, 25,  0,  0,  0],[ 5,  5, 10, 25, 25, 10,  5,  5],[10, 10, 20, 30, 30, 20, 10, 10],[50, 50, 50, 50, 50, 50, 50, 50],[ 800,  800,  800,  800,  800,  800,  800,  800]]
+    self.bKnightHeatmap = [[-50,-40,-30,-30,-30,-30,-40,-50],[-40,-20,  0,  5,  5,  0,-20,-40],[-30,  5, 10, 15, 15, 10,  5,-30],[-30,  0, 15, 20, 20, 15,  0,-30],[-30,  5, 15, 20, 20, 15,  5,-30],[-30,  0, 10, 15, 15, 10,  0,-30],[-40,-20,  0,  0,  0,  0,-20,-40],[-50,-40,-30,-30,-30,-30,-40,-50]]
+    self.bBishopHeatmap = [[-20,-10,-30,-10,-10,-30,-10,-20],[-10,  5,  0,  0,  0,  0,  5,-10],[-10, 10, 10, 10, 10, 10, 10,-10],[-10,  0, 10, 10, 10, 10,  0,-10],[-10,  5,  5, 10, 10,  5,  5,-10],[-10,  0,  5, 10, 10,  5,  0,-10],[-10,  0,  0,  0,  0,  0,  0,-10],[-20,-10,-30,-10,-10,-30,-10,-20]]
+    self.bRookHeatmap = [[ 0,  0,  0,  5,  5,  0,  0,  0],[ -5,  0,  0,  0,  0,  0,  0, -5],[-5,  0,  0,  0,  0,  0,  0, -5],[-5,  0,  0,  0,  0,  0,  0, -5],[-5,  0,  0,  0,  0,  0,  0, -5],[-5,  0,  0,  0,  0,  0,  0, -5],[5, 10, 10, 10, 10, 10, 10,  5],[0,  0,  0,  0,  0,  0,  0,  0]]
+    self.bQueenHeatmap = [[-20,-10,-10, -5, -5,-10,-10,-20],[-10,  0,  0,  0,  0,  0,  0,-10],[-10,  0,  5,  5,  5,  5,  0,-10],[ 0,  0,  5,  5,  5,  5,  0, -5],[ -5,  0,  35,  35,  35,  35,  0, -5],[-10,  5,  35, 35,  35,  35,  0,-10],[-10,  0,  5,  30,  30,  30,  0,-10],[-20,-10,-10, -5, -5,-10,-10,-20]]
+    self.bKingEarlyGameHeatmap = [[20, 30, 10,  0,  0, 10, 30, 20],[20, 20, -500,  -500,  -500,  -500, 20, 20],[-10,-20,-20,-20,-20,-20,-20,-10],[-20,-30,-30,-40,-40,-30,-30,-20],[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30]]
+    self.bKingLateGameHeatmap = [[-50,-30,-30,-30,-30,-30,-30,-50],[-30,-30,  0,  0,  0,  0,-30,-30],[-30,-10, 20, 30, 30, 20,-10,-30],[-30,-10, 30, 40, 40, 30,-10,-30],[-30,-10, 30, 40, 40, 30,-10,-30],[-30,-10, 20, 30, 30, 20,-10,-30],[-30,-20,-10,  0,  0,-10,-20,-30],[-50,-40,-30,-20,-20,-30,-40,-50]]
+ 
+  #returns the integer value provided by the heatmap of the respective piece in the respective position
+  def referenceHeatmap(self,oldRow,oldColumn,newRow,newColumn,color,pieceType):
+    value = 0
+    #gets heatmaps of black pieces
+    if color == 'b':
+      if pieceType == 'p':
+        value = self.bPawnHeatmap[newRow][newColumn] - self.bPawnHeatmap[oldRow][oldColumn]
+      elif pieceType == 'N':
+        value = self.bKnightHeatmap[newRow][newColumn] - self.bKnightHeatmap[oldRow][oldColumn]
+      elif pieceType == 'B':
+        value = self.bBishopHeatmap[newRow][newColumn] - self.bBishopHeatmap[oldRow][oldColumn]
+      elif pieceType == 'R':
+        value = self.bRookHeatmap[newRow][newColumn] - self.bRookHeatmap[oldRow][oldColumn] 
+      elif pieceType == 'Q':
+        value = self.bQueenHeatmap[newRow][newColumn] - self.bQueenHeatmap[oldRow][oldColumn] 
+      elif pieceType == 'K' and not self.isLateGame('b'):
+        value = self.bKingEarlyGameHeatmap[newRow][newColumn] - self.bKingEarlyGameHeatmap[oldRow][oldColumn] 
+      elif pieceType == 'K' and self.isLateGame('b'):
+        value = self.bKingLateGameHeatmap[newRow][newColumn] - self.bKingLateGameHeatmap[oldRow][oldColumn]
+    
+      #print(value)
+  #gets heatmaps of white pieces
+    else:
+      if pieceType == 'p':
+        value = self.wPawnHeatmap[newRow][newColumn] - self.wPawnHeatmap[oldRow][oldColumn]
+      elif pieceType == 'N':
+        value = self.wKnightHeatmap[newRow][newColumn] - self.wKnightHeatmap[oldRow][oldColumn]
+      elif pieceType == 'B':
+        value = self.wBishopHeatmap[newRow][newColumn] - self.wBishopHeatmap[oldRow][oldColumn]
+      elif pieceType == 'R':
+        value = self.wRookHeatmap[newRow][newColumn] - self.wRookHeatmap[oldRow][oldColumn] 
+      elif pieceType == 'Q':
+        value = self.wQueenHeatmap[newRow][newColumn] - self.wQueenHeatmap[oldRow][oldColumn] 
+      elif pieceType == 'K' and not self.isLateGame('w'):
+        value = self.wKingEarlyGameHeatmap[newRow][newColumn] - self.wKingEarlyGameHeatmap[oldRow][oldColumn] 
+      elif pieceType == 'K' and self.isLateGame('w'):
+        value = self.wKingLateGameHeatmap[newRow][newColumn] - self.wKingLateGameHeatmap[oldRow][oldColumn]
+ 
+ 
+    return value
+ 
+  #returns true if 'color' has lost at least 20 points of material, returns false otherwise
+  def isLateGame(self,color):
+    total = 0
+    for piece in self.getPieces(color):
+      total += piece.getValue()
+    
+    if total < 20:
+      return False
+    else:
+      return True
+ 
+  #returns the value of the piece on the tile, if the tile is empty, return 0
+  def getTileValue(self,row,column):
+    tile = self.pieceBoard[row][column]
+    if tile == 0:
+      total = 0
+    elif tile.getType() == 'p':
+      total = 100
+    elif tile.getType() == 'N':
+      total = 320
+    #Bishops are worth slightly more than knights
+    elif tile.getType() == 'B':
+      total = 330
+    elif tile.getType() == 'R':
+      total = 500
+    elif tile.getType() == 'Q':
+      total = 900
+    #if the piece is a king
+    else:
+      total = 20000
+    
+    return total
+ 
+ 
+  #creates an array of all the 'color' pieces on the board
+  def setPieces(self,color):
+    listOfPieces = []
+    for r in self.pieceBoard:
+      for c in r:
+        if c != 0 and c.getColor() == color:
+          listOfPieces.append(c)
+ 
+    return listOfPieces
+ 
+  #returns a list of the pieces of 'color'
+  def getPieces(self,color):
+    if color == 'w':
+      return self.whitePieces
+    else:
+      return self.blackPieces
+ 
+  #used to remove a piece from its respective array when it's captured 
+  def removePiece(self,name):
+    for x in self.whitePieces:
+      if x.getName() == name:
+        self.whitePieces.remove(x)
+  
+    for x in self.blackPieces:
+      if x.getName() == name:
+        self.blackPieces.remove(x)
+ 
+  #returns last move as a 5-tuple (startingRow,startingColumn,endingRow,endingColumn, pieceType)
+  def getLastMove(self):
+    return self.lastMove
+  
+  #sets the last move
+  def setLastMove(self, startingRow,startingColumn,endingRow,endingColumn, pieceType):
+    self.lastMove = (startingRow,startingColumn,endingRow,endingColumn,pieceType)
+ 
+  #returns the king's position
+  def getKingPos(self,color):
+    if color == 'w':
+      return self.whiteKingPos
+    else:
+      return self.blackKingPos
+ 
+  
+  #sets teh king's position
+  def setKingPos(self,row,column,color):
+    if color == 'w':
+      self.whiteKingPos = (row,column)
+    else:
+      self.blackKingPos = (row,column)
+  
+  #returns the ascii board
+  def getBoard(self):
+    return self.pieceBoard
+ 
+  #if there is a piece of the same color as "color" in the tile given by "row" and "column", return true, otherwise return false
+  def isTileFriendly(self,row,column,color):
+    if self.pieceBoard[row][column] != 0:
+      #print(self.pieceBoard[row][column].getColor())
+      if self.pieceBoard[row][column].getColor() == color:
+        return True
+    return False
+  #if there is a piece of the opposite color as "color" in the tile given by "row" and "column", return true, otherwise return false
+  def isTileEnemy(self,row,column,color):
+    if self.pieceBoard[row][column] != 0:
+      #print(self.pieceBoard[row][column].getColor())
+      if self.pieceBoard[row][column].getColor() != color:
+        return True
+    return False
+  #if the given tile is empty, return true, if not, return false
+  def isTileEmpty(self,row,column):
+    if self.pieceBoard[row][column] == 0:
+      return True
+    else:
+      return False
+ 
+ 
+ 
+  #if the tile is exists, return true, otherwise return false
+  def positionExists(self,row,column):
+    if row >= 8 or row < 0 or column >= 8 or column < 0:
+      return False
+    else:
+      return True
+  #add one to the fov of all beam units cause the king doesn't see the fact that its checkmated
+  #returns all the a list of the tiles that the given piece can "see"
+  #move king fov and king's legal moves are NOT the same, it is the source of the recursion--CHANGE
+  def fov(self,piece):
+    legalMoves = []
+    #gets position of piece
+    row,column = piece.getPosition()
+    #if the piece is a pawn
+    if piece.getType() == 'p':
+      #if the pawn is black
+      if piece.getColor() == 'b':
+        #pawns capture diagonally
+        if self.positionExists(row+1,column+1):
+          legalMoves.append((row+1,column+1))
+        if self.positionExists(row+1,column-1):
+          legalMoves.append((row+1,column-1))
+          
+      #if the pawn is white
+      else:  
+        #pawns capture diagonally
+        if self.positionExists(row-1,column+1):
+          legalMoves.append((row-1,column+1))
+        if self.positionExists(row-1,column-1):
+          legalMoves.append((row-1,column-1))
+    #---------------------------------------------------------------------------------------------------------------------------------------
+    #if the piece is bishop
+    elif piece.getType() == 'B':
+      #gets avaliable moves in the lower right diagonal
+      for i in range(1,8):
+        if not self.positionExists(row+i,column+i):
+          break
+        else:
+          legalMoves.append((row+i,column+i))
+          if(not self.isTileEmpty(row+i,column+i)):
+            break
+      #gets available moves in the upper right diagonal
+      for i in range(1,8):
+        if not self.positionExists(row-i,column+i):
+          break
+        else:
+          legalMoves.append((row-i,column+i))
+          if(not self.isTileEmpty(row-i,column+i)):
+            break
+      #gets available moves in the lower left diagonal
+      for i in range(1,8):
+        if not self.positionExists(row+i,column-i):
+          break
+        else:
+          legalMoves.append((row+i,column-i))
+          if(not self.isTileEmpty(row+i,column-i)):
+            break
+      #gets available moves in the upper left diagonal
+      for i in range(1,8):
+        if not self.positionExists(row-i,column-i):
+          break
+        else:
+          legalMoves.append((row-i,column-i))
+          if(not self.isTileEmpty(row-i,column-i)):
+            break
+    
+    #---------------------------------------------------------------------------------------------------------------------------------------
+ 
+    #if the piece is a rook
+    elif piece.getType() == 'R':
+      #gets avaliable moves below the rook
+      for i in range(1,8):
+        if not self.positionExists(row+i,column):
+          break
+        else:
+          legalMoves.append((row+i,column))
+          if(not self.isTileEmpty(row+i,column)):
+            break
+      #gets avaliable moves above the rook
+      for i in range(1,8):
+        if not self.positionExists(row-i,column):
+          break
+        else:
+          legalMoves.append((row-i,column))
+          if(not self.isTileEmpty(row-i,column)):
+            break
+      #gets avaliable moves left of the rook
+      for i in range(1,8):
+        if not self.positionExists(row,column-i):
+          break
+        else:
+          legalMoves.append((row,column-i))
+          if(not self.isTileEmpty(row,column-i)):
+            break
+      
+      #gets avaliable moves right of the rook
+      for i in range(1,8):
+        if not self.positionExists(row,column+i):
+          break
+        else:
+          legalMoves.append((row,column+i))
+          if(not self.isTileEmpty(row,column+i)):
+            break
+    #---------------------------------------------------------------------------------------------------------------------------------------
+    #if the piece is a queen
+    elif piece.getType() == 'Q':
+      #gets avaliable moves below the queen
+      for i in range(1,8):
+        if not self.positionExists(row+i,column):
+          break
+        else:
+          legalMoves.append((row+i,column))
+          if(not self.isTileEmpty(row+i,column)):
+            break
+      #gets avaliable moves above the queen
+      for i in range(1,8):
+        if not self.positionExists(row-i,column):
+          break
+        else:
+          legalMoves.append((row-i,column))
+          if(not self.isTileEmpty(row-i,column)):
+            break
+      #gets avaliable moves left of the queen
+      for i in range(1,8):
+        if not self.positionExists(row,column-i):
+          break
+        else:
+          legalMoves.append((row,column-i))
+          if(not self.isTileEmpty(row,column-i)):
+            break
+      
+      #gets avaliable moves right of the queen
+      for i in range(1,8):
+        if not self.positionExists(row,column+i):
+          break
+        else:
+          legalMoves.append((row,column+i))
+          if(not self.isTileEmpty(row,column+i)):
+            break
+      #gets avaliable moves in the lower right diagonal
+      for i in range(1,8):
+        if not self.positionExists(row+i,column+i):
+          break
+        else:
+          legalMoves.append((row+i,column+i))
+          if(not self.isTileEmpty(row+i,column+i)):
+            break
+      #gets available moves in the upper right diagonal
+      for i in range(1,8):
+        if not self.positionExists(row-i,column+i):
+          break
+        else:
+          legalMoves.append((row-i,column+i))
+          if(not self.isTileEmpty(row-i,column+i)):
+            break
+      #gets available moves in the lower left diagonal
+      for i in range(1,8):
+        if not self.positionExists(row+i,column-i):
+          break
+        else:
+          legalMoves.append((row+i,column-i))
+          if(not self.isTileEmpty(row+i,column-i)):
+            break
+      #gets available moves in the upper left diagonal
+      for i in range(1,8):
+        if not self.positionExists(row-i,column-i):
+          break
+        else:
+          legalMoves.append((row-i,column-i))
+          if(not self.isTileEmpty(row-i,column-i)):
+            break
+    
+    #---------------------------------------------------------------------------------------------------------------------------------------
+    #if the piece is a knight
+    elif piece.getType() == 'N':
+     #gets legal moves for a knight piece
+      if self.positionExists(row+2,column-1):
+        legalMoves.append((row+2,column-1))
+      if self.positionExists(row+2,column+1):
+        legalMoves.append((row+2,column+1))
+      if self.positionExists(row-2,column-1):
+        legalMoves.append((row-2,column-1))
+      if self.positionExists(row-2,column+1):
+        legalMoves.append((row-2,column+1))
+      if self.positionExists(row-1,column+2):
+        legalMoves.append((row-1,column+2))
+      if self.positionExists(row-1,column-2):
+        legalMoves.append((row-1,column-2))
+      if self.positionExists(row+1,column+2):
+        legalMoves.append((row+1,column+2))
+      if self.positionExists(row+1,column-2):
+        legalMoves.append((row+1,column-2))
+ 
+    #---------------------------------------------------------------------------------------------------------------------------------------
+    #if the piece is a king
+    #move castling to legal moves
+    elif piece.getType() == 'K':
+      #if the king is black
+      #*******************************************************************************************************************************************************
+      if piece.getColor() == 'b':
+        #print("im getting cucked")
+        if self.positionExists(row+1,column+1):
+          legalMoves.append((row+1,column+1))
+        if self.positionExists(row,column+1):
+          legalMoves.append((row,column+1))
+        if self.positionExists(row-1,column+1):
+          legalMoves.append((row-1,column+1))
+        if self.positionExists(row-1,column):
+          legalMoves.append((row-1,column))
+        if self.positionExists(row+1,column):
+          legalMoves.append((row+1,column))
+        if self.positionExists(row+1,column-1):
+          legalMoves.append((row+1,column-1))
+        if self.positionExists(row,column-1):
+          legalMoves.append((row,column-1))
+        if self.positionExists(row-1,column-1):
+          legalMoves.append((row-1,column-1))
+ 
+ 
+      #if the king is white
+      else:
+        if self.positionExists(row+1,column+1):
+          legalMoves.append((row+1,column+1))
+        if self.positionExists(row,column+1):
+          legalMoves.append((row,column+1))
+        if self.positionExists(row-1,column+1):
+          legalMoves.append((row-1,column+1))
+        if self.positionExists(row-1,column):
+          legalMoves.append((row-1,column))
+        if self.positionExists(row+1,column):
+          legalMoves.append((row+1,column))
+        if self.positionExists(row+1,column-1):
+          legalMoves.append((row+1,column-1))
+        if self.positionExists(row,column-1):
+          legalMoves.append((row,column-1))
+        if self.positionExists(row-1,column-1):
+          legalMoves.append((row-1,column-1))
+        
+        
+    return legalMoves
+  
+ 
+  #returns a list of legal positions for the piece to be in
+  def legalMoves(self,piece):
+    legalMoves=[]
+    allMoves = self.fov(piece)
+    #print(allMoves)
+    currentRow,currentColumn = piece.getPosition()
+    #all the tiles in a pieces fov are legal, unless a friendly piece already occupies it, or the piece in question is pinned to the king
+    #pawns are an exception, 
+ 
+    
+ 
+    
+ 
+    #if an  "available" tile is occupied by a friendly piece, remove it from the list of legal moves
+    for x in allMoves:
+      row = x[0]
+      column = x[1]
+      #if the piece is a pawn
+      if piece.getType() == 'p':
+        if self.isTileEnemy(row,column,piece.getColor()):
+          legalMoves.append(x)
+      
+      elif piece.getType() == 'K':
+        #make sure the king cannot move into a check
+        if not self.tileIsChecked(row,column,piece.getColor()) and self.checkMoveForSafety(piece.getPositionTuple()[0],piece.getPositionTuple()[1],row,column,piece.getColor()) and not self.isTileFriendly(row,column,piece.getColor()):
+          legalMoves.append(x)
+ 
+      elif not self.isTileFriendly(row,column,piece.getColor()) and self.checkMoveForSafety(piece.getPositionTuple()[0],piece.getPositionTuple()[1],row,column,piece.getColor()):
+          legalMoves.append(x)
+          
+ 
+    #if the piece is a king 
+    if piece.getType() == 'K':
+      #check if castling is legal
+      if piece.getColor() == 'w':
+        #castling is allowed if the king and rook havn't moved, and the king isn't in check, and none of the squares in between the king and rook are occupied or checked
+        #castle short
+        if not self.inCheck('w') and not piece.getHasMoved() and self.isTileFriendly(7,7,'w') and not self.pieceBoard[7][7].getHasMoved():
+          if not self.tileIsChecked(7,6,'w') and self.isTileEmpty(7,6) and not self.tileIsChecked(7,5,'w') and self.isTileEmpty(7,5):
+            legalMoves.append((piece.getPositionTuple()[0],piece.getPositionTuple()[1]+2))
+        #castle long
+        if not self.inCheck('w') and not piece.getHasMoved() and self.isTileFriendly(7,0,'w') and not self.pieceBoard[7][0].getHasMoved():
+          if not self.tileIsChecked(7,1,'w') and self.isTileEmpty(7,1) and not self.tileIsChecked(7,2,'w') and self.isTileEmpty(7,2) and not self.tileIsChecked(7,3,'w') and self.isTileEmpty(7,3):
+            legalMoves.append((piece.getPositionTuple()[0],piece.getPositionTuple()[1]-2))
+      else:
+        #castle short
+        if not self.inCheck('b') and not piece.getHasMoved() and self.isTileFriendly(0,7,'b') and not self.pieceBoard[0][7].getHasMoved():
+          if not self.tileIsChecked(0,6,'b') and self.isTileEmpty(0,6) and not self.tileIsChecked(0,5,'b') and self.isTileEmpty(0,5):
+            legalMoves.append((piece.getPositionTuple()[0],piece.getPositionTuple()[1]+2))
+        #castle long
+        if not self.inCheck('b') and not piece.getHasMoved() and self.isTileFriendly(0,0,'b') and not self.pieceBoard[0][0].getHasMoved():
+          if not self.tileIsChecked(0,1,'b') and self.isTileEmpty(0,1) and not self.tileIsChecked(0,2,'b') and self.isTileEmpty(0,2) and not self.tileIsChecked(0,3,'b') and self.isTileEmpty(0,3):
+            legalMoves.append((piece.getPositionTuple()[0],piece.getPositionTuple()[1]-2))
+    
+    #if the piece is a pawn
+    if piece.getType() == 'p':
+      lastMove = self.getLastMove()
+      row,column = piece.getPosition()
+      #if the pawn is black
+      if piece.getColor() == 'b':
+        #if the square one space above is empty, add it to legalMoves
+        if self.positionExists(row+1,column) and self.pieceBoard[row+1][column] == 0 and self.checkMoveForSafety(currentRow,currentColumn,row+1,column,piece.getColor()):
+            legalMoves.append((row+1,column))
+        #if it's the pawn's first move
+            if row == 1:
+              #if the square two spaces above is empty, add it to legalMoves
+              if self.pieceBoard[row+2][column] == 0 and self.checkMoveForSafety(currentRow,currentColumn,row+2,column,piece.getColor()):
+                legalMoves.append((row+2,column))
+        #checks for en passant
+        #a black pawn must be on the fourth row to en passant
+        if row == 4:
+          #if the last piece to move was a pawn
+          if lastMove[4] == 'p':
+            #if the pawn moved two spaces in an adjecent row, allow the piece to en passant
+            if lastMove[0] == 6 and lastMove[2] == 4 and lastMove[1] == column-1:
+              legalMoves.append((row+1,column-1))
+            elif lastMove[0] == 6 and lastMove[2] == 4 and lastMove[1] == column+1:
+              legalMoves.append((row+1,column+1))
+          
+      #if the pawn is white
+      else:          
+        #if the square one space below is empty, add it to legalMoves
+        if self.positionExists(row-1,column) and self.pieceBoard[row-1][column] == 0 and self.checkMoveForSafety(currentRow,currentColumn,row-1,column,piece.getColor()):
+            legalMoves.append((row-1,column))
+            #if it's the pawn's first move
+            if row == 6:
+              #if the square two spaces below is empty, add it to legalMoves
+              if self.pieceBoard[row-2][column] == 0 and self.checkMoveForSafety(currentRow,currentColumn,row-2,column,piece.getColor()):
+                legalMoves.append((row-2,column))
+        
+        #checks for en passant
+        #a white pawn must be on the 3rd row to en passant
+        if row == 3:
+          #if the last piece to move was a pawn
+          if lastMove[4] == 'p':
+            #if the pawn moved two spaces in an adjecent row, allow the piece to en passant
+            if lastMove[0] == 1 and lastMove[2] == 3 and lastMove[1] == column-1:
+              legalMoves.append((row-1,column-1))
+            elif lastMove[0] == 1 and lastMove[2] == 3 and lastMove[1] == column+1:
+              legalMoves.append((row-1,column+1))
+ 
+    legalMovesComplete = []
+    #additionally, if the king is in check, it must either move out of check, or block the check
+    if self.inCheck(piece.getColor()):
+      for x in legalMoves:
+        row = x[0]
+        column = x[1]
+        #if the move gets the king out of check, add it to legalMovesComplete
+        if type(self.pieceBoard[currentRow][currentColumn]) != int:
+          
+          if self.checkMoveForSafety(currentRow,currentColumn,row,column,piece.getColor()) :
+            legalMovesComplete.append(x)
+    else:
+      legalMovesComplete = legalMoves
+ 
+    
+    return legalMovesComplete
+ 
+ 
+  #if the king of the passed color is in check
+  def inCheck(self,color):
+    #get kings position
+    kingPos = self.getKingPos(color)
+    kingRow = kingPos[0]
+    kingColumn = kingPos[1]
+    #if the king is in check return True
+    return self.tileIsChecked(kingRow,kingColumn,color)
+      
+    #if the tile is within the enemy's pov, return true
+  def tileIsChecked(self,row,column,color):
+    enemyView = []
+   # print("Checking Row: " + str(row) + "Column: " +  str(column))
+    enemyView = self.unsafeTiles(color)
+    position = (row,column)
+    if position in enemyView:
+     # print("True")
+      return True
+    else:
+     # print("False")
+      return False
+  
+  
+ 
+ 
+#returns a list of the tiles (row,column) that are unsafe for "color" pieces
+  def unsafeTiles(self,color):
+    squaresAttacked = []
+    #iterate through every tile on the board
+    for r in self.pieceBoard:
+      for c in r:
+        #if the tile is a piece and If the piece is an enemy
+        if c != 0 and c.getColor() != color:
+          row,column = c.getPosition()
+          moves = self.fov(c)
+          #print(moves,end="")
+          #print(" is unsafe")
+          #add the fov of the piece to squares attacked
+          squaresAttacked = squaresAttacked + moves
+          
+    return squaresAttacked
+ 
+  #checks to see if the 'color' king is mated, that means the king has no legal moves, is in check, and there is no way to block check
+  def checkForCheckmate(self, color):
+    #get kings position
+    kingPos = self.getKingPos(color)
+    kingRow = kingPos[0]
+    kingColumn = kingPos[1]
+    #if the king is in check and has no legal moves
+    if self.tileIsChecked(kingRow,kingColumn,color) and len(self.legalMoves(self.pieceBoard[kingRow][kingColumn])) == 0:
+      allMoves =[]
+      anyMoveSafe = False
+ 
+      for piece in self.getPieces(color):
+        row,column = piece.getPosition()
+        moves = self.legalMoves(piece)
+        #if there is a legal move that stops check, return false
+        for move in moves:
+          if self.checkMoveForSafety(row,column, move[0],move[1],color):
+            #print("move is safe")
+            return False
+ 
+      return True
+  #returns true if stalemate is reached
+  def checkForStaleMate(self,color):
+    if(self.isLateGame(color)):
+      pieces = self.getPieces(color)
+      for piece in pieces:
+        row,column = piece.getPosition()
+        moves = self.legalMoves(piece)
+        #if a legal move exists, return False, otherwise, return True
+        if len(moves) >= 1:
+          return False
+      return True
+ 
+  #returns false if the move results in a check for the 'color' king
+  def checkMoveForSafety(self,oldRow,oldColumn,row,column,color):
+ 
+    boardCopy = deepcopy(self)
+    #if the piece is a king, change the king positon
+    if type(boardCopy.pieceBoard[oldRow][oldColumn]) != int:
+      if boardCopy.pieceBoard[oldRow][oldColumn].getType() == 'K':
+        boardCopy.setKingPos(row,column,color)
+
+    boardCopy.pieceBoard[oldRow][oldColumn].setPosition(row,column)
+    boardCopy.pieceBoard[row][column] = boardCopy.pieceBoard[oldRow][oldColumn]
+    boardCopy.pieceBoard[oldRow][oldColumn] = 0
+ 
+    #if the move would put the king in check
+    if boardCopy.inCheck(color):
+      #print("Row: " + str(oldRow) + " Column: " + str(oldColumn) + "to Row:" + str(row) + " Column: " + str(column) + "\n Check")
+ 
+      return False
+    #if the move is safe
+    else:
+      #print("Row: " + str(oldRow) + " Column: " + str(oldColumn) + "to Row:" + str(row) + " Column: " + str(column) + "/n No check")
+      return True
+  
+  #returns the a list of best moves for 'color' to take. The moves are evaluated by the amount of material differnceand positional advantage they generate. 
+  #if cycle = 0, function returns a list of moves, if cycle = 1, function returns evaluation of best counter move
+  def getBestMoves(self,color,cycle):
+      blackPieces = self.getPieces('b')
+      whitePieces = self.getPieces('w')
+      netValue = 0
+      bestMove = -20000
+      listOfMoves = []
+      maxDepth = 1
+      counter = 0
+      if color == 'b':
+      #black is maximizing player
+ 
+        #check all legal moves for black pieces
+        for piece in blackPieces:
+          netValue = 0
+          originalPos = piece.getPositionTuple()
+          #if a piece exists at the position
+          if self.pieceBoard[originalPos[0]][originalPos[1]] != 0:
+              
+            #print("Checking piece: " + str(originalPos))
+            #simulate every legal move, and then simulate the best theoretical response from white
+            for move in self.legalMoves(piece):
+              boardCopy = deepcopy(self)
+              netValue = boardCopy.referenceHeatmap(originalPos[0],originalPos[1],move[0],move[1],'b',piece.getType())
+              netValue += boardCopy.getTileValue(move[0],move[1])
+              
+              
+              boardCopy.movePiece(originalPos[0],originalPos[1],move[0],move[1],True)
+              #ai will consider opponet's response one move into the future
+              if cycle < maxDepth:
+                cycle += 1
+                #print("Checking White Counter")
+                netValue += boardCopy.getBestMoves('w',cycle)
+                cycle-= 1
+ 
+              #if the move is better than any previously considered move, make that the move to be played
+              
+              if netValue >= bestMove:
+                listOfMoves = []
+                bestMove = netValue
+                listOfMoves.append((originalPos[0],originalPos[1],move[0],move[1]))
+              #if the move is the same as a previosuly considerd move, add it to the list of possible moves to play
+              elif netValue == bestMove:
+                listOfMoves.append((originalPos[0],originalPos[1],move[0],move[1]))
+              #counter+=1
+              #print("Moves checked: " + str(counter))
+          
+          
+ 
+      else:
+        #white is minimizing player
+        bestMove *= -1
+        #check all legal moves for white pieces
+        for piece in whitePieces:
+          netValue = 0
+          originalPos = piece.getPositionTuple()
+          #if a piece exists at the position
+          if self.pieceBoard[originalPos[0]][originalPos[1]] != 0:
+            #print("Checking piece: " + str(originalPos))
+            #simulate every legal move, and then simulate the best theoretical response from black
+            for move in self.legalMoves(piece):
+              boardCopy = deepcopy(self)
+              netValue = -1 * boardCopy.getTileValue(move[0],move[1])
+              netValue -=boardCopy.referenceHeatmap(originalPos[0],originalPos[1],move[0],move[1],'w',piece.getType())
+              boardCopy.movePiece(originalPos[0],originalPos[1],move[0],move[1],True)
+              #ai will only consider opponet's response one move into the future
+              if cycle < maxDepth:
+                cycle += 1
+                #print("Checking black Counter")
+                netValue += boardCopy.getBestMoves('b',cycle)
+                cycle -= 1
+ 
+              #if the move is better than any previously considered move, make that the move to be played
+              if netValue < bestMove:
+                listOfMoves = []
+                bestMove = netValue
+                listOfMoves.append((originalPos[0],originalPos[1],move[0],move[1]))
+              #if the move is the same as a previosuly consiered move, add it to the list of possible moves to play
+              elif netValue == bestMove:
+                listOfMoves.append((originalPos[0],originalPos[1],move[0],move[1]))
+              #counter+=1
+              #print("Moves checked: " + str(counter))
+ 
+      if cycle == 0:
+        return listOfMoves
+      else:
+        return bestMove
+ 
+ 
+  #add staleMate
+  def smartAiMove(self,color):
+    blackPieces = self.getPieces('b')
+    whitePieces = self.getPieces('w')
+    legalMoveFlag = False
+    #if the king is in check
+    if self.inCheck(color):
+      print("Check!")
+      #check to see if it's checkmate
+      if self.checkForCheckmate(color):
+        if color == 'w':
+          print("Checkmate! Black wins!")
+        else:
+          print("Checkmate! White wins!")
+        return False
+    
+    if(self.checkForStaleMate(color)):
+      print("Stalemate!")
+      return False
+    listOfMoves = self.getBestMoves(color,0)
+    
+    randomMove = random.choice(listOfMoves)
+    print(self.pieceBoard[randomMove[0]][randomMove[1]].getType() + convert((randomMove[0],randomMove[1]))+ "-->" + self.pieceBoard[randomMove[0]][randomMove[1]].getType() + convert((randomMove[2],randomMove[3])))
+    self.movePiece(randomMove[0],randomMove[1],randomMove[2],randomMove[3],True)
+    
+    return True
+ 
+ 
+  #plays a random move for the computer. The computer plays the 'color' pieces. reurns false if the computer is checkMated
+  def aiMove(self,color):
+    blackPieces = self.getPieces('b')
+    whitePieces = self.getPieces('w')
+    legalMoveFlag = False
+    #if the king is in check
+    if self.inCheck(color):
+      print("Check!")
+      #check to see if it's checkmate
+      if self.checkForCheckmate(color):
+        if color == 'w':
+          print("Checkmate! Black wins!")
+        else:
+          print("Checkmate! White wins!")
+        return False
+    if color == 'b':
+      #choose a random black piece, if it has a legal move(s) play one of them, 
+      #if not, choose another piece
+      #repeat ad nauseam
+      while not legalMoveFlag:
+        randomPiece = random.choice(blackPieces)
+        if len(self.legalMoves(randomPiece)) > 0:
+          oldPos = randomPiece.getPositionTuple()
+          newPos = random.choice(self.legalMoves(randomPiece))
+          self.movePiece(oldPos[0],oldPos[1],newPos[0],newPos[1],True)
+          legalMoveFlag = True
+    else:
+      #choose a random white piece, if it has a legal move(s) play one of them, 
+      #if not, choose another piece
+      #repeat ad nauseam
+      while not legalMoveFlag:
+        randomPiece = random.choice(whitePieces)
+        if len(self.legalMoves(randomPiece)) > 0:
+          oldPos = randomPiece.getPositionTuple()
+          newPos = random.choice(self.legalMoves(randomPiece))
+          self.movePiece(oldPos[0],oldPos[1],newPos[0],newPos[1],True)
+          legalMoveFlag = True
+ 
+    print(randomPiece.getType() + convert(oldPos)+ "-->" + randomPiece.getType() + convert(newPos))
+    return True
+  #used to check if the user inputs a valid coordinate
+  #returns true if coordinates are valid, false otherwise
+  def isValidCoordinate(self,input):
+    ans = input.lower()
+    if len(ans) == 2:
+      if ans[0] == 'a' or ans[0] == 'b' or ans[0] == 'c' or ans[0] == 'd' or ans[0] == 'e' or ans[0] == 'f' or ans[0] == 'g' or ans[0] == 'h': 
+        if ans[1] == '1' or ans[1] == '2' or ans[1] == '3' or ans[1] == '4' or ans[1] == '5' or ans[1] == '6' or ans[1] == '7' or ans[1] == '8':
+          return True
+    return False
+
+  #If the 'color's' king isnt checkmated, promp the user for a move
+  def promptMove(self,color):
+    promptFlag = 0
+    #if the king is in check
+    if self.inCheck(color):
+      print("Check!")
+      #check to see if it's checkmate
+      if self.checkForCheckmate(color):
+        if color == 'w':
+          print("Checkmate! Black wins!")
+        else:
+          print("Checkmate! White wins!")
+        return False
+    if(self.checkForStaleMate(color)):
+      print("Stalemate!")
+      return False
+    #repeatedly prompt until a valid response is given
+    while promptFlag == 0:
+      print("Type the location of the piece you would like to move")
+      userInput = input()
+      if self.isValidCoordinate(userInput):
+        oldRow,oldColumn = coordinateConvert(userInput)
+        if not self.positionExists(oldRow,oldColumn):
+          print("That position does not exist")
+        elif self.isTileEmpty(oldRow,oldColumn):
+          print("There is no piece at this poition")
+        elif self.isTileEnemy(oldRow,oldColumn,color):
+          print("You cannot move enemy pieces")
+        elif len(self.legalMoves(self.pieceBoard[oldRow][oldColumn])) == 0:
+          print(self.pieceBoard[oldRow][oldColumn].getName() + " has no legal moves, select another piece")
+        elif self.isTileFriendly(oldRow,oldColumn,color):
+          print("Legal moves for " + self.pieceBoard[oldRow][oldColumn].getName(), end=": ")
+          for x in self.legalMoves(self.pieceBoard[oldRow][oldColumn]):
+            print(convert(x),end=" ")
+          print("")
+          print("Type the location of the tile you would like to move to")
+          userInput = input()
+          if self.isValidCoordinate(userInput):
+            newRow,newColumn = coordinateConvert(userInput)
+            promptFlag = self.movePiece(oldRow,oldColumn,newRow,newColumn,True)
+          else:
+            print("You must enter a valid coordinate, for example- \"e4\" ")
+ 
+        else:
+          print("You must enter a valid coordinate, for example- \"e2\" ")
+      else:
+          print("You must enter a valid coordinate, for example- \"e2\"")
+ 
+    return True  
+ 
+  #moves the piece from the old tile to the new tile
+  #alters the state of pieceBoard and piece position 
+  def movePiece(self,oldRow,oldColumn,newRow,newColumn,ai):
+    piece = self.pieceBoard[oldRow][oldColumn]
+    #printMoves(piece)
+    if (newRow,newColumn) in self.legalMoves(piece):
+      tempPiece = self.pieceBoard[newRow][newColumn]
+      #if the target tile is occupied, "capture" the piece
+      if tempPiece != 0:
+        self.removePiece(tempPiece.getName())
+ 
+      #give piece a new location
+      self.pieceBoard[newRow][newColumn] = piece
+      #set old location to be empty
+      self.pieceBoard[oldRow][oldColumn] = 0
+      #if the piece is a pawn, check if it can be promoted
+      if(piece.getType() == 'p'):
+        #have the users promote their piece
+        if((piece.getColor() == 'w' and newRow == 0 ) or (piece.getColor() == 'b' and newRow == 7) and ai == False):
+          #if a white pawn gets to row 8, or black pawn gets to row 1, promote it
+          self.promote(piece)
+        #the computer will always automatically promote to a queen
+        elif ((piece.getColor() == 'w' and newRow == 0 ) or (piece.getColor() == 'b' and newRow == 7) and ai == True):
+          piece.setType('Q')
+        #checks for en passant
+        if piece.getColor() == 'b':
+          #print("check for en passant")
+          #print(self.isTileEmpty(newRow,newColumn))
+          if ((newColumn == oldColumn - 1) or (newColumn == oldColumn + 1)) and tempPiece == 0:
+            #print("take " + str(newRow-1) + ", " + str(newColumn))
+            #print(self.pieceBoard[newRow-1][newColumn])
+            self.removePiece(self.pieceBoard[newRow-1][newColumn].getName())
+            self.pieceBoard[newRow-1][newColumn] = 0
+            #print(self.pieceBoard[newRow-1][newColumn])
+        else:
+          if ((newColumn == oldColumn - 1) or (newColumn == oldColumn + 1)) and tempPiece == 0:
+            self.removePiece(self.pieceBoard[newRow+1][newColumn].getName())
+            self.pieceBoard[newRow+1][newColumn] = 0
+ 
+      #if the piece is a king, update king position
+      if piece.getType() == 'K':
+        self.setKingPos(newRow,newColumn,piece.getColor())
+        #allows king-side castling
+        if oldColumn - newColumn > 1:
+          #changes rook's position
+          self.pieceBoard[newRow][0].setPosition(newRow,newColumn + 1)
+          self.pieceBoard[newRow][newColumn+1] = self.pieceBoard[newRow][0]
+          self.pieceBoard[newRow][0] = 0
+        #queen's side castling
+        elif oldColumn - newColumn < -1:
+          #sets rook's new position
+          self.pieceBoard[newRow][7].setPosition(newRow,newColumn - 1)
+          self.pieceBoard[newRow][newColumn-1] = self.pieceBoard[newRow][7]
+          self.pieceBoard[newRow][7] = 0
+      piece.setPosition(newRow,newColumn)
+ 
+      piece.setHasMoved(True)
+      self.setLastMove(oldRow,oldColumn,newRow,newColumn,piece.getType())
+      #self.printBoard()
+      return 1
+    else:
+      print("That is not a legal move")
+      return 0
+ 
+  def promote(self,piece):
+    piecePromoted = False
+    while(not piecePromoted):
+      print("What piece would you like to promote to?\n Type 'q' for queen \n Type 'n' for a knight")
+      print("You can get the other pieces too I guess('b','r') but why would you do that?")
+      userInput = input()
+      userInput = userInput.upper()
+      #if the input is recognized, promote the piece
+      if userInput == "Q" or userInput == "N" or userInput == "B" or userInput == "R":
+        piece.setType(userInput)
+        piecePromoted = True
+      else:
+        print("input not recognized, try again")
+ 
+ 
+#prints out an Ascii representation of the board
+  def printBoard(self):
+    
+    i=8
+    for r in self.pieceBoard:
+      print(i,end="|")
+      i-=1
+      for c in r:
+        if c == 0:
+          print("\u25A1",end = "  ")
+        else:
+          #pieces look different for white and black
+          if c.getColor() == 'w':
+            print(c.getType(),end = "  ")
+          else:
+            if c.getType() == 'p': 
+              print("\u1E57", end = "  ")
+            elif c.getType() == 'N':
+              print("\u1E46", end = "  ")
+            elif c.getType() == 'R':
+              print("\u1E5A",end = "  ")
+            elif c.getType() == 'Q':
+              print("\u211A", end= "  ")
+            elif c.getType() == 'K':
+              print("\u1E32", end = "  ")
+            else:
+              print("\u1E04", end = "  ")
+      print("")
+    
+    
+    print("  ﹊﹊﹊﹊﹊﹊﹊﹊﹊﹊﹊﹊﹊ ")  
+    print("  a  b  c  d  e  f  g  h ")
+ 
+ 
+class piece:
+  
+  def __init__(self, Type, color,row,column):
+    self.Type = Type
+    self.color = color
+    self.column = column
+    self.row = row
+    self.captured = False
+    self.hasMoved = False
+ 
+  def getHasMoved(self):
+    return self.hasMoved
+ 
+  def setHasMoved(self,moved):
+    self.hasMoved = moved
+  #returns piece's row and column position
+  def getPosition(self):
+    return self.row,self.column
+ 
+  #returns piece's row and column posiotion as a tuple
+  def getPositionTuple(self):
+    return (self.row,self.column)
+  #sets a new position for the piece
+  def setPosition(self,row,column):
+    self.row = row
+    self.column = column
+  #returns piece's Color
+  def getColor(self):
+    return self.color
+  #returns piece's type
+  def getType(self):
+    return self.Type
+  def getCaptured(self):
+    return self.captured
+  def setCaptured(self, trueOrfalse):
+    self.captured = trueOrfalse
+  def setType(self,type1):
+    self.Type = type1
+ 
+  #returns the piece's name as a string in chess notation
+  def getName(self):
+    pieceName = str(self.Type) + convert2(self.row,self.column)
+    return pieceName
+ 
+  #returns the point value of the piece, king is worth 0 for the purposes of this function
+  def getValue(self):
+    total = 0
+    if self.getType() == 'p':
+      total = 100
+    elif self.getType() == 'N':
+      total = 320
+    #Bishops are worth slightly more than knights
+    elif self.getType() == 'B':
+      total = 330
+    elif self.getType() == 'R':
+      total = 500
+    elif self.getType() == 'Q':
+      total = 900
+    elif self.getType() == 'K':
+      total = 0
+    return total
+ 
+  
+ 
+# converts a passed tuple[row][column] from python coordinates to chess coordinates for easeier reading
+def convert(position):
+  row = 8 - position[0]
+  if position[1] == 0:
+    column = "a"
+  elif position[1] == 1:
+    column = "b"
+  elif position[1] == 2:
+    column = "c"
+  elif position[1] == 3:
+    column = "d"
+  elif position[1] == 4:
+    column = "e"
+  elif position[1] == 5:
+    column = "f"
+  elif position[1] == 6:
+    column = "g"
+  elif position[1] == 7:
+    column = "h"   
+  return column + str(row)
+ 
+#same as above, but takes row and column as separate inputs
+def convert2(row,column):
+  newRow = 8 - row
+  if column == 0:
+    newColumn = "a"
+  elif column == 1:
+    newColumn = "b"
+  elif column == 2:
+    newColumn = "c"
+  elif column == 3:
+    newColumn = "d"
+  elif column == 4:
+    newColumn = "e"
+  elif column == 5:
+    newColumn = "f"
+  elif column == 6:
+    newColumn = "g"
+  elif column == 7:
+    newColumn = "h"
+  return newColumn + str(newRow)
+ 
+ 
+#converts chess coordiantes to array coordinates, coordinate must be in the format "a1", a-h,1-8
+def coordinateConvert(coordinate):
+  coordinate.lower()
+  if coordinate[0] == 'a':
+    intColumn = 0
+  elif coordinate[0] == 'b':
+    intColumn = 1
+  elif coordinate[0] == 'c':
+    intColumn = 2
+  elif coordinate[0] == 'd':
+    intColumn = 3
+  elif coordinate[0] == 'e':
+    intColumn = 4
+  elif coordinate[0] == 'f':
+    intColumn = 5
+  elif coordinate[0] == 'g':
+    intColumn = 6
+  elif coordinate[0] == 'h':
+    intColumn = 7
+  else:
+    intColumn = -1
+  
+  intRow = 8 - int(coordinate[1])
+  #print(intRow,intColumn)
+  return intRow,intColumn
+ 
+ 
+def printMoves(piece):
+  moves = chessBoard.legalMoves(piece)
+  posRow, posColumn = piece.getPosition()
+  if piece.getType() != 'p':
+    print("Valid moved for " + piece.getType() + convert2(posRow,posColumn) + ":")
+  else:
+    print("Valid moved for " + piece.getType() + convert2(posRow,posColumn) + ":")
+ 
+  for i in range(len(moves)):
+    print(convert(moves[i]), end=" ")
+    
+  print("")
+ 
+#-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+p1 = piece('p','w',6,0)
+p2 = piece('p','w',6,1)
+p3 = piece('p','w',6,2)
+p4 = piece('p','w',6,3)
+p5 = piece('p','w',6,4)
+p6 = piece('p','w',6,5)
+p7 = piece('p','w',6,6)
+p8 = piece('p','w',6,7)
+ 
+b1 = piece('B','w',7,2)
+b2 = piece('B','w',7,5)
+ 
+n1 = piece('N','w',7,1)
+n2 = piece('N','w',7,6)
+ 
+r1 = piece('R','w',7,0)
+r2 = piece('R','w',7,7)
+ 
+q1 = piece('Q','w',7,3)
+ 
+k1 = piece('K','w',7,4)
+ 
+Bp1 = piece('p','b',1,0)
+Bp2 = piece('p','b',1,1)
+Bp3 = piece('p','b',1,2)
+Bp4 = piece('p','b',1,3)
+Bp5 = piece('p','b',1,4)
+Bp6 = piece('p','b',1,5)
+Bp7 = piece('p','b',1,6)
+Bp8 = piece('p','b',1,7)
+ 
+Bb1 = piece('B','b',0,2)
+Bb2 = piece('B','b',0,5)
+ 
+Bn1 = piece('N','b',0,1)
+Bn2 = piece('N','b',0,6)
+ 
+Br1 = piece('R','b',0,0)
+Br2 = piece('R','b',0,7)
+ 
+Bq1 = piece('Q','b',0,3)
+ 
+Bk1 = piece('K','b',0,4)
+ 
+ 
+ 
+ 
+#2d array represents the chess board, board[rows][columns]
+ 
+pieceBoard = [[Br1, Bn1, Bb1, Bq1,Bk1,Bb2,Bn2,Br2], [Bp1, Bp2, Bp3, Bp4,Bp5,Bp6,Bp7,Bp8], [0, 0, 0, 0,0,0,0,0],[0, 0, 0, 0,0,0,0,0], [0, 0, 0, 0,0,0,0,0],[0, 0, 0, 0,0,0,0,0], [p1, p2, p3, p4,p5,p6,p7,p8], [r1, n1, b1, q1,k1,b2,n2,r2]]
+moves = []
+enemyPov = []
+chessBoard = board(pieceBoard)
+#printMoves(k1)
+chessBoard.printBoard()
+game = True
+
+print("Welcome to Ascii Chess!")
+print("Would you like to play against a human, or against the ai?")
+ans2 = input()
+ans2 = ans2.lower()
+while ans2 != "human" and ans2 != "ai":
+  print("Please type \"human\" or \"ai\"")
+  ans2 = input()
+  ans2 = ans2.lower()
+if ans2 == "ai":
+  print("Would you like to play as Black (dots) or White (no dots) ?")
+  ans = input()
+  ans = ans.lower()
+  while ans != "white" and ans != "black":
+    print("Please type \"white\" or \"black\"")
+    ans = input()
+    ans = ans.lower()
+else:
+  ans = ""
+
+
+
+while game:
+  if ans == "white" and ans2 == "ai":
+    print("White's turn!")
+    game = chessBoard.promptMove('w')
+    chessBoard.printBoard()
+    if not game:
+      break
+    print("Black's turn!")
+    game = chessBoard.smartAiMove('b')
+    chessBoard.printBoard()
+  elif ans == "black" and ans2 == "ai":
+    print("White's turn!")
+    game = chessBoard.smartAiMove('w')
+    chessBoard.printBoard()
+    if not game:
+      break
+    print("Black's turn!")
+    game = chessBoard.promptMove('b')
+    chessBoard.printBoard()
+  else:
+    print("White's turn!")
+    game = chessBoard.promptMove('w')
+    chessBoard.printBoard()
+    if not game:
+      break
+    print("Black's turn!")
+    game = chessBoard.promptMove('b')
+    chessBoard.printBoard()
+ 
+  
+         
+ 
+ 
+ 
+ 
+
