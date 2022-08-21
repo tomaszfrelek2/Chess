@@ -5,7 +5,6 @@ from copy import *
 import random
  
 
-#pieces should be removed from array when 'taken'
 class board:
   
   def __init__(self, pieceBoard):
