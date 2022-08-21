@@ -1,0 +1,116 @@
+#returns the a list of best moves for 'color' to take. The moves are evaluated by the amount of material difference and positional advantage they generate. 
+  #if cycle = 0, function returns a list of moves, if cycle = 1, function returns evaluation of best counter move
+  #alpha and beta parameters are for alpha-beta pruning: alpha = best choice for white, beta = best choice for black, initial values are -20000 and 20000 respectively
+  def getBestMoves(self,color,cycle,alpha,beta):
+      blackPieces = self.getPieces('b')
+      whitePieces = self.getPieces('w')
+      a = -20000
+      b = 20000
+      netValue = 0
+      bestMove = -20000
+      listOfMoves = []
+      maxDepth = 1
+      counter = 0
+      if color == 'b':
+      #black is maximizing player
+ 
+        #check all legal moves for black pieces
+        for piece in blackPieces:
+          netValue = 0
+          originalPos = piece.getPositionTuple()
+          #if a piece exists at the position
+          if self.pieceBoard[originalPos[0]][originalPos[1]] != 0:
+              
+            #print("Checking piece: " + str(originalPos))
+            #simulate every legal move, and then simulate the best theoretical response from white
+            for move in self.legalMoves(piece):
+              boardCopy = deepcopy(self)
+              netValue = boardCopy.referenceHeatmap(originalPos[0],originalPos[1],move[0],move[1],'b',piece.getType())
+              netValue += boardCopy.getTileValue(move[0],move[1])
+              
+              
+              boardCopy.movePiece(originalPos[0],originalPos[1],move[0],move[1],True)
+              #ai will consider opponent's response one move into the future
+              if cycle < maxDepth:
+                cycle += 1
+                #print("Checking White Counter")
+                netValue += boardCopy.getBestMoves('w',cycle,alpha,beta)
+                a = max(netValue,bestMove)
+                alpha = max(a,alpha)
+                cycle-= 1
+                print("Beta: " + str(beta))
+                print("Alpha: " + str(alpha))
+                if beta <= alpha:
+                  print("Move Pruned")
+                  break
+                
+ 
+              #if the move is better than any previously considered move, make that the move to be played
+              
+              if netValue > bestMove:
+                listOfMoves = []
+                bestMove = netValue
+                listOfMoves.append((originalPos[0],originalPos[1],move[0],move[1]))
+              #if the move is the same as a previously considered move, add it to the list of possible moves to play
+              #elif netValue == bestMove:
+               # listOfMoves.append((originalPos[0],originalPos[1],move[0],move[1]))
+ 
+              counter+=1
+              #print("Moves checked: " + str(counter))
+ 
+          
+ 
+      else:
+        #white is minimizing player
+        bestMove *= -1
+        #check all legal moves for white pieces
+        for piece in whitePieces:
+          netValue = 0
+          originalPos = piece.getPositionTuple()
+          #if a piece exists at the position
+          if self.pieceBoard[originalPos[0]][originalPos[1]] != 0:
+            #print("Checking piece: " + str(originalPos))
+            #simulate every legal move, and then simulate the best theoretical response from black
+            for move in self.legalMoves(piece):
+              boardCopy = deepcopy(self)
+              netValue = -1 * boardCopy.getTileValue(move[0],move[1])
+              netValue -=boardCopy.referenceHeatmap(originalPos[0],originalPos[1],move[0],move[1],'w',piece.getType())
+              boardCopy.movePiece(originalPos[0],originalPos[1],move[0],move[1],True)
+              #ai will only consider opponent's response one move into the future
+              if cycle < maxDepth:
+                cycle += 1
+                #print("Checking black Counter")
+                netValue -= boardCopy.getBestMoves('b',cycle,alpha,beta)
+                
+                b = min(bestMove,netValue)
+                beta = min(b,beta)
+                cycle -= 1
+                print("Beta: " + str(beta))
+                print("Alpha: " + str(alpha))
+                if beta <= alpha:
+                  print("Move Pruned")
+                  break
+ 
+              #if the move is better than any previously considered move, make that the move to be played
+              if netValue < bestMove:
+                listOfMoves = []
+                bestMove = netValue
+                listOfMoves.append((originalPos[0],originalPos[1],move[0],move[1]))
+              #if the move is the same as a previosuly consiered move, add it to the list of possible moves to play
+             # elif netValue == bestMove:
+                #listOfMoves.append((originalPos[0],originalPos[1],move[0],move[1]))
+              #counter+=1
+              #print("Moves checked: " + str(counter))
+ 
+      if cycle == 0:
+        print("Got to cycle 0")
+        #print(len(listOfMoves))
+        #for x in listOfMoves:
+          #print(str(self.pieceBoard[x[0]][x[1]].getName()) + " to " +str(x[2]) + str(x[3]))
+          #print(bestMove)
+        return listOfMoves
+      else:
+        print("Cycle #: " + str(cycle))
+ 
+        return bestMove
+ 
