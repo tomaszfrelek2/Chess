@@ -55,9 +55,9 @@ The basis of my project was the chess programming wiki: https://www.chessprogram
 <br>
 I based my heatmaps on the ones found here: https://www.chessprogramming.org/Simplified_Evaluation_Function
 <br>
-I got the pseudo-code for alpha-beta pruning from here: https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning
+  Here's where I <i>learned</i> about alpha-beta pruning: https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning
 <br>
-Here's the youtube video that actually let me understand alpha-beta pruning: https://www.youtube.com/watch?v=l-hh51ncgDI
+  Here's the youtube video that actually let me <i>understand</i> alpha-beta pruning: https://www.youtube.com/watch?v=l-hh51ncgDI
 <br>
 Here's the youtube video that inspired me to do this project: https://www.youtube.com/watch?v=U4ogK0MIzqk
 </p>
