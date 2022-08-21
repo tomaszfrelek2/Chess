@@ -9,12 +9,21 @@ Q: Why did I make this?
 <p>
 A: I was bored over the summer and wanted to do something with my time
 </p>
-Q: Why are there no graphics
-?<p>
+Q: Why are there no graphics?
+<p>
 A: There are a million versions of chess with graphics, I thought I'd make something semi-unique by using ascii based graphics. 
 </p>
 also I don't know Unity
 <p></p>
+Q: Why does the black queen loko differnt from all the other black pieces?
+<p>
+A: Because, for the life of me, I could not find the unicode value for a Q with a dot on it like the rest of of the pieces.
+</p>
+Q: Can you En Passant?
+<p>
+A: Of course!
+</p>
+
 Q: How does the A.I. work?
 <p>
 A: As far as chess ai's go, it's no AlphaZero. My ai brute-forces every single possible move and counter move, and decides on the best move from there. This effectivly means that the ai can see 1 turn into the future, so it can be outplayed by even a novice player (it did however, give my 6-year-old brother a run for his money). The ai determines the "best" move by calculating the material and positional advantage that each move generates.
@@ -36,6 +45,7 @@ Q: Did you do this all by yourself?
 <p>
 A: Yes! I did this whole project on my own, though obviously I stand on the shoulders of giants. Chess programming is by no means a new field, and so there are a metric ton of resources out there that I used along the way. There is even an entire wiki devoted just to chess programming!
 </p>
+
 
 Q: What resources did you use?
 <p>
