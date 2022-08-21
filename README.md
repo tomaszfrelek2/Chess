@@ -32,3 +32,25 @@ Q: If the ai is just slow, why didn't you optimise your code better?
 A: Another excellent question! The simple answer, is that I did-- at one point anyway. Once I realized that my ai was slow, I implemented an optimization process called alpha-beta pruning. Alpha-beta pruning optimizes minmax algorithms by ignoring ("pruning") any potential moves that are guarenteed to give a worse outcome than a previously evaluated move. This actually worked, but not as well as I had hoped. At a depth of 4(i.e. two turns ahead), it about halved the time to move, from ~60-70 seconds to about 30 seconds. Since I felt that 30 seconds per move was still too slow for a computer, I decided to limit the ai to looking only one move ahead. Additionally, since alpha-beta pruning doesn't work at a depth of 2 (i.e. looking one turn ahead), I decided to cut out the alpha-beta pruning algorithm from my code. However, as proof that I'm not talking out of my ass, I added the alpha-beta pruning algorithm in the "alpha-beta pruning algorithm" file.
 </p>
 
+Q: Did you do this all by yourself?
+<p>
+A: Yes! I did this whole project on my own, though obviously I stand on the shoulders of giants. Chess programming is by no means a new field, and so there are a metric ton of resources out there that I used along the way. There is even an entire wiki devoted just to chess programming!
+</p>
+
+Q: What resources did you use?
+<p>
+A: Oh so many!
+<p>
+The basis of my project was the chess programming wiki: https://www.chessprogramming.org/Main_Page
+</p><p>
+I based my heatmaps on the ones found here: https://www.chessprogramming.org/Simplified_Evaluation_Function
+</p><p>
+I got the pseudo-code for alpha-beta pruning from here: https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning
+</p><p>
+Here's the youtube video that actually let me understand alpha-beta pruning: https://www.youtube.com/watch?v=l-hh51ncgDI
+</p><p>
+Here's the youtube video that inspired me to do this project: https://www.youtube.com/watch?v=U4ogK0MIzqk
+</p>
+</p>
+  
+
