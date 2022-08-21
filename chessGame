@@ -1,5 +1,5 @@
 import IPython
-#Chess lol
+#Chess
 from array import *
 from copy import *
 import random
