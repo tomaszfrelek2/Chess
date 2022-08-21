@@ -40,17 +40,16 @@ A: Yes! I did this whole project on my own, though obviously I stand on the shou
 Q: What resources did you use?
 <p>
 A: Oh so many!
-<p>
+<br>
 The basis of my project was the chess programming wiki: https://www.chessprogramming.org/Main_Page
-</p><p>
+<br>
 I based my heatmaps on the ones found here: https://www.chessprogramming.org/Simplified_Evaluation_Function
-</p><p>
+<br>
 I got the pseudo-code for alpha-beta pruning from here: https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning
-</p><p>
+<br>
 Here's the youtube video that actually let me understand alpha-beta pruning: https://www.youtube.com/watch?v=l-hh51ncgDI
-</p><p>
+<br>
 Here's the youtube video that inspired me to do this project: https://www.youtube.com/watch?v=U4ogK0MIzqk
-</p>
 </p>
   
 
