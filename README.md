@@ -1,7 +1,7 @@
 # Chess
 I made Chess!
 <hr>
-Chess.ipynb is the notebook version of the game, chessGame is the plain-text version
+Chess.ipynb is the Jupyter Notebook version of the game, chessGame is the plain-text version
 <hr>
 # FAQ
 <p></p>
