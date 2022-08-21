@@ -15,7 +15,7 @@ A: There are a million versions of chess with graphics, I thought I'd make somet
 </p>
 also I don't know Unity
 <p></p>
-Q: Why does the black queen loko differnt from all the other black pieces?
+Q: Why does the black queen look differnt from all the other black pieces?
 <p>
 A: Because, for the life of me, I could not find the unicode value for a Q with a dot on it like the rest of of the pieces.
 </p>
