@@ -13,7 +13,6 @@ Q: Why are there no graphics?
 <p>
 A: There are a million versions of chess with graphics, I thought I'd make something semi-unique by using ascii based graphics. 
 </p>
-also I don't know Unity
 <p></p>
 Q: Why does the black queen look differnt from all the other black pieces?
 <p>
